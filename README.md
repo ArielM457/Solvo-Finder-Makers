@@ -35,7 +35,10 @@ Crear un archivo `.env` en `ZF-client/` con esto:
 
 ```env
 VITE_API_BASE_URL=https://zolvo-agent.thankfulisland-7e6d96dc.westus.azurecontainerapps.io
+VITE_N8N_NEW_LEAD_WEBHOOK=https://jafel-ai.app.n8n.cloud/webhook-test/new-lead
 ```
+
+Si el workflow de n8n ya esta activado de forma publica, cambia `webhook-test` por `webhook`.
 
 ## Como levantar el frontend
 
@@ -58,11 +61,9 @@ http://localhost:5173
 Consume:
 
 - `GET /leads`
-- `POST /outbound/launch`
 
 Lo que muestra:
 
-- Formulario para iniciar outreach
 - Nombre
 - Empresa
 - Rol
@@ -74,13 +75,20 @@ Cuando haces click en una fila, abre:
 
 - `/conversation/:leadId`
 
-Cuando envias el formulario de outreach:
+### Create Lead
 
-1. el backend crea el lead
-2. genera el primer correo
-3. envia el email
-4. registra el primer mensaje del agente
-5. el lead aparece en el pipeline
+Consume:
+
+- `POST VITE_N8N_NEW_LEAD_WEBHOOK`
+
+Lo que hace:
+
+1. envia el formulario al webhook de n8n
+2. n8n reenvia el lead al backend
+3. el backend crea el lead
+4. genera el correo por defecto
+5. envia el email inicial
+6. el lead aparece en el pipeline
 
 ### Conversation
 

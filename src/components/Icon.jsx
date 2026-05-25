@@ -25,9 +25,11 @@ const iconMap = {
   arrowUp: 'arrow_upward',
   arrowDown: 'arrow_downward',
   addCircle: 'add_circle',
+  personAdd: 'person_add',
   send: 'send',
   mail: 'mail',
   link: 'link',
+  checklist: 'checklist',
 }
 
 export default function Icon({ name, className = '' }) {

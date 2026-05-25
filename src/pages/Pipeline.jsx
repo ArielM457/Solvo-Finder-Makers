@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import FunnelStageBadge from '../components/FunnelStageBadge'
 import Icon from '../components/Icon'
 import { useLeads } from '../hooks/useLeads'
-import { launchOutbound } from '../lib/api'
 import { isApiConfigured } from '../lib/api'
 import { formatChannel, formatRelativeTime, getLeadInitials } from '../utils/formatters'
 
@@ -17,33 +15,11 @@ const stageOptions = [
   { label: 'Discarded', value: 'discarded' },
 ]
 
-const initialOutreachForm = {
-  name: '',
-  company: '',
-  role: '',
-  email: '',
-  channel: 'email',
-  linkedin_profile: '',
-  outreach_context: '',
-}
-
 export default function PipelinePage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [stageFilter, setStageFilter] = useState('all')
-  const [outreachForm, setOutreachForm] = useState(initialOutreachForm)
-  const [lastOutreach, setLastOutreach] = useState(null)
   const { data: leads = [], isLoading, isError, error } = useLeads(stageFilter)
-
-  const outreachMutation = useMutation({
-    mutationFn: launchOutbound,
-    onSuccess: (data) => {
-      setLastOutreach(data)
-      setOutreachForm(initialOutreachForm)
-      queryClient.invalidateQueries({ queryKey: ['leads'] })
-    },
-  })
 
   const filteredLeads = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -69,16 +45,6 @@ export default function PipelinePage() {
   function handleOpenConversation(leadId) {
     localStorage.setItem('zolvo-last-lead-id', leadId)
     navigate(`/conversation/${leadId}`)
-  }
-
-  function handleOutreachChange(event) {
-    const { name, value } = event.target
-    setOutreachForm((current) => ({ ...current, [name]: value }))
-  }
-
-  function handleOutreachSubmit(event) {
-    event.preventDefault()
-    outreachMutation.mutate(outreachForm)
   }
 
   return (
@@ -146,9 +112,23 @@ export default function PipelinePage() {
               Pipeline visibility for every outbound motion
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-              Launch outbound from the dashboard, monitor prospect momentum, and jump
-              into live conversations as soon as intent shifts.
+              Monitor prospect momentum, track stage movement, and jump into live
+              conversations as soon as intent shifts.
             </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/create-lead"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-bg transition-transform active:scale-[0.98]"
+            >
+              <Icon name="personAdd" />
+              <span>Create lead</span>
+            </Link>
+            <div className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-zinc-500">
+              New outreach lives in its own tab now, so Pipeline stays focused on
+              visibility.
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -178,187 +158,52 @@ export default function PipelinePage() {
           </div>
         </div>
 
-        <div className="mb-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <section className="panel p-6">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                <Icon name="addCircle" className="text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-muted">Launch new outreach</h3>
-                <p className="text-sm text-zinc-500">
-                  Add an email prospect, generate the first-touch message, and send it
-                  from ZolvoReach.
-                </p>
-              </div>
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <div className="panel p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                New Leads
+              </p>
+              <Icon name="personAdd" className="text-primary" />
             </div>
+            <p className="text-4xl font-semibold tracking-tight text-primary">Create</p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Use the dedicated Create Lead tab to trigger the n8n intake workflow.
+            </p>
+          </div>
 
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleOutreachSubmit}>
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Lead name
-                </span>
-                <input
-                  required
-                  name="name"
-                  value={outreachForm.name}
-                  onChange={handleOutreachChange}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Company
-                </span>
-                <input
-                  required
-                  name="company"
-                  value={outreachForm.company}
-                  onChange={handleOutreachChange}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Role
-                </span>
-                <input
-                  required
-                  name="role"
-                  value={outreachForm.role}
-                  onChange={handleOutreachChange}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Email
-                </span>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  value={outreachForm.email}
-                  onChange={handleOutreachChange}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Channel
-                </span>
-                <select
-                  name="channel"
-                  value={outreachForm.channel}
-                  onChange={handleOutreachChange}
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                >
-                  <option value="email">Email</option>
-                  <option value="linkedin" disabled>
-                    LinkedIn coming soon
-                  </option>
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  LinkedIn profile
-                </span>
-                <input
-                  name="linkedin_profile"
-                  value={outreachForm.linkedin_profile}
-                  onChange={handleOutreachChange}
-                  placeholder="Optional for future LinkedIn workflows"
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <label className="block md:col-span-2">
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                  Why this lead may care
-                </span>
-                <textarea
-                  name="outreach_context"
-                  value={outreachForm.outreach_context}
-                  onChange={handleOutreachChange}
-                  rows={4}
-                  placeholder="Example: They run a lean finance team and likely struggle with invoice reconciliation, payment matching, or closing visibility."
-                  className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted outline-none focus:border-primary"
-                />
-              </label>
-
-              <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-zinc-500">
-                  The backend will create the lead, generate the initial email, send it,
-                  and log the first agent message in the conversation.
-                </p>
-                <button
-                  type="submit"
-                  disabled={outreachMutation.isPending}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-bg transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <Icon name="send" />
-                  {outreachMutation.isPending ? 'Sending...' : 'Send first outreach'}
-                </button>
-              </div>
-            </form>
-
-            {outreachMutation.isError && (
-              <div className="mt-4 rounded-2xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
-                {outreachMutation.error?.message ?? 'Could not send the outreach email.'}
-              </div>
-            )}
-          </section>
-
-          <aside className="panel p-6">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/15 text-secondary">
-                <Icon name="mail" className="text-2xl" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-muted">Initial email preview</h3>
-                <p className="text-sm text-zinc-500">
-                  This reflects the last outbound email created by the backend.
-                </p>
-              </div>
+          <div className="panel p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                Response Velocity
+              </p>
+              <Icon name="speed" className="text-primary" />
             </div>
+            <p className="text-4xl font-semibold tracking-tight text-primary">
+              {leads.length > 0 ? 'Live' : '--'}
+            </p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Lead activity will appear here after replies begin to arrive.
+            </p>
+          </div>
 
-            {lastOutreach ? (
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-border bg-surface p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                    Subject
-                  </p>
-                  <p className="text-sm font-medium text-muted">{lastOutreach.subject}</p>
-                </div>
-                <div className="rounded-2xl border border-border bg-surface p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                    Body
-                  </p>
-                  <p className="whitespace-pre-line text-sm leading-6 text-muted">
-                    {lastOutreach.body}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleOpenConversation(lastOutreach.lead_id)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary"
-                >
-                  <Icon name="mail" />
-                  Open generated conversation
-                </button>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-border bg-surface/50 p-6 text-sm text-zinc-500">
-                Send your first outreach from the form and the generated email will show
-                here.
-              </div>
-            )}
-          </aside>
+          <div className="panel p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                Top Performing Channel
+              </p>
+              <Icon name="hub" className="text-secondary" />
+            </div>
+            <p className="text-4xl font-semibold tracking-tight text-secondary">
+              {leads.filter((lead) => lead.channel === 'linkedin').length >=
+              leads.filter((lead) => lead.channel === 'email').length
+                ? 'LinkedIn'
+                : 'Email'}
+            </p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Quick view based on the current visible leads in your pipeline.
+            </p>
+          </div>
         </div>
 
         <div className="panel overflow-hidden">
@@ -400,10 +245,10 @@ export default function PipelinePage() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Icon name="pipeline" className="text-2xl" />
               </div>
-              <h3 className="text-xl font-semibold text-muted">No leads yet. Launch your first outreach.</h3>
+              <h3 className="text-xl font-semibold text-muted">No leads yet. Connect your pipeline.</h3>
               <p className="mt-2 max-w-md text-sm text-zinc-500">
-                Use the launch form above to create a lead, send the initial email,
-                and start the outbound flow.
+                Open the Create Lead tab to send the first prospects into your n8n and
+                backend flow.
               </p>
             </div>
           ) : (
@@ -471,40 +316,7 @@ export default function PipelinePage() {
           )}
         </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <div className="panel p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                Response Velocity
-              </p>
-              <Icon name="speed" className="text-primary" />
-            </div>
-            <p className="text-4xl font-semibold tracking-tight text-primary">
-              {leads.length > 0 ? 'Live' : '--'}
-            </p>
-            <p className="mt-2 text-sm text-zinc-500">
-              Lead activity will appear here after replies begin to arrive.
-            </p>
-          </div>
-
-          <div className="panel p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                Top Performing Channel
-              </p>
-              <Icon name="hub" className="text-secondary" />
-            </div>
-            <p className="text-4xl font-semibold tracking-tight text-secondary">
-              {leads.filter((lead) => lead.channel === 'linkedin').length >=
-              leads.filter((lead) => lead.channel === 'email').length
-                ? 'LinkedIn'
-                : 'Email'}
-            </p>
-            <p className="mt-2 text-sm text-zinc-500">
-              Quick view based on the current visible leads in your pipeline.
-            </p>
-          </div>
-
+        <div className="mt-8 grid gap-4 md:grid-cols-1">
           <div className="panel relative overflow-hidden p-5">
             <div className="relative z-10">
               <div className="mb-4 flex items-center justify-between">

@@ -3,7 +3,8 @@ import Icon from './Icon'
 
 const navItems = [
   { label: 'Pipeline', icon: 'pipeline', to: '/' },
-  { label: 'Conversations', icon: 'conversations', to: '/conversation/inbox' },
+  { label: 'Create Lead', icon: 'personAdd', to: '/create-lead' },
+  { label: 'Conversations', icon: 'conversations', to: '/conversation' },
   { label: 'Metrics', icon: 'metrics', to: '/metrics' },
 ]
 
@@ -20,6 +21,17 @@ function isActivePath(itemPath, currentPath) {
 }
 
 export default function Sidebar({ currentPath }) {
+  const lastLeadId =
+    typeof window !== 'undefined' ? localStorage.getItem('zolvo-last-lead-id') : null
+
+  function getNavigationPath(item) {
+    if (item.to === '/conversation') {
+      return lastLeadId ? `/conversation/${lastLeadId}` : '/'
+    }
+
+    return item.to
+  }
+
   return (
     <>
       <aside className="border-border/80 fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r bg-[#0b0b0b] px-5 py-6 lg:flex">
@@ -39,7 +51,7 @@ export default function Sidebar({ currentPath }) {
           {navItems.map((item) => (
             <NavLink
               key={item.label}
-              to={item.to}
+              to={getNavigationPath(item)}
               className={`nav-link ${isActivePath(item.to, currentPath) ? 'nav-link-active' : ''}`}
             >
               <Icon name={item.icon} />
@@ -86,14 +98,14 @@ export default function Sidebar({ currentPath }) {
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#0b0b0b]/95 px-3 py-2 backdrop-blur lg:hidden">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {navItems.map((item) => {
             const active = isActivePath(item.to, currentPath)
 
             return (
               <NavLink
                 key={item.label}
-                to={item.to}
+                to={getNavigationPath(item)}
                 className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-medium transition-colors ${
                   active ? 'bg-primary/10 text-primary' : 'text-zinc-400'
                 }`}

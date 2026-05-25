@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import ConversationPage from './pages/Conversation'
+import CreateLeadPage from './pages/CreateLead'
 import MetricsPage from './pages/Metrics'
 import PipelinePage from './pages/Pipeline'
 
@@ -13,6 +14,7 @@ function AppLayout() {
       <main className="min-h-screen pb-20 lg:ml-72 lg:pb-0">
         <Routes>
           <Route path="/" element={<PipelinePage />} />
+          <Route path="/create-lead" element={<CreateLeadPage />} />
           <Route path="/conversation/:leadId" element={<ConversationPage />} />
           <Route path="/metrics" element={<MetricsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

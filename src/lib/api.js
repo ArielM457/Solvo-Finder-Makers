@@ -1,5 +1,4 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
-
 export const isApiConfigured = Boolean(apiBaseUrl)
 
 async function apiRequest(path) {
@@ -31,6 +30,41 @@ async function apiRequest(path) {
   return response.json()
 }
 
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`
+
+    try {
+      const data = await response.json()
+      if (data?.detail) {
+        message = Array.isArray(data.detail) ? data.detail.join(', ') : data.detail
+      } else if (data?.message) {
+        message = data.message
+      } else if (data?.error) {
+        message = data.error
+      }
+    } catch {
+      // Ignore body parse errors and use the generic status message.
+    }
+
+    throw new Error(message)
+  }
+
+  try {
+    return await response.json()
+  } catch {
+    return { status: 'accepted' }
+  }
+}
+
 export function getHealth() {
   return apiRequest('/health')
 }
@@ -57,28 +91,13 @@ export async function launchOutbound(payload) {
     throw new Error('Missing VITE_API_BASE_URL')
   }
 
-  const response = await fetch(`${apiBaseUrl}/outbound/launch`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  })
+  return postJson(`${apiBaseUrl}/outbound/launch`, payload)
+}
 
-  if (!response.ok) {
-    let message = `Request failed with status ${response.status}`
-
-    try {
-      const data = await response.json()
-      if (data?.detail) {
-        message = Array.isArray(data.detail) ? data.detail.join(', ') : data.detail
-      }
-    } catch {
-      // Ignore body parse errors and use the generic status message.
-    }
-
-    throw new Error(message)
+export async function createLead(payload) {
+  if (!isApiConfigured) {
+    throw new Error('Missing VITE_API_BASE_URL')
   }
 
-  return response.json()
+  return postJson(`${apiBaseUrl}/leads`, payload)
 }
