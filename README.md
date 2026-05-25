@@ -34,7 +34,7 @@ El primer outreach tambien puede empezar desde el frontend.
 Crear un archivo `.env` en `ZF-client/` con esto:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=https://zolvo-agent.thankfulisland-7e6d96dc.westus.azurecontainerapps.io
 ```
 
 ## Como levantar el frontend
@@ -118,7 +118,7 @@ Lo que muestra:
 Verifica que el backend este arriba:
 
 ```powershell
-curl http://localhost:8000/health
+curl https://zolvo-agent.thankfulisland-7e6d96dc.westus.azurecontainerapps.io/health
 ```
 
 Si responde `status: ok`, el frontend ya puede conectarse.
